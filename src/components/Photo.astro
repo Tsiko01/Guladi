@@ -1,0 +1,37 @@
+---
+/**
+ * Responsive photo (AVIF + WebP with srcset, sized from the source file).
+ * `name` is a path inside src/assets/photos without extension.
+ */
+import { Picture } from 'astro:assets';
+import { getPhoto, widthsFor } from '../lib/photos';
+
+interface Props {
+  name: string;
+  alt: string;
+  sizes: string;
+  class?: string;
+  priority?: boolean;
+  position?: string;
+  maxWidth?: number;
+}
+
+const { name, alt, sizes, class: cls, priority = false, position, maxWidth } = Astro.props;
+const img = getPhoto(name);
+if (!img) throw new Error(`Photo not found: src/assets/photos/${name}.*`);
+---
+
+<Picture
+  src={img}
+  alt={alt}
+  formats={['avif', 'webp']}
+  fallbackFormat="jpg"
+  widths={widthsFor(img, maxWidth)}
+  sizes={sizes}
+  quality={62}
+  loading={priority ? 'eager' : 'lazy'}
+  fetchpriority={priority ? 'high' : 'auto'}
+  decoding="async"
+  class={cls}
+  style={position ? `object-position:${position}` : undefined}
+/>

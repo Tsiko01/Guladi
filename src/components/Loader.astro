@@ -1,0 +1,201 @@
+---
+/**
+ * Intro screen, shown once per browser session (the inline script in Base.astro
+ * adds `html.has-loader`), never with reduced motion and never without JS.
+ * CSS-only (~2s), animates only transform/opacity on top of the already
+ * rendered page, so it never blocks the main thread.
+ *
+ * Sequence: badge pops in → brand letters pop in one by one → the van drives
+ * along the dashed road, which is drawn in behind it → tagline → the dark panel lifts away
+ * with a curved, orange-edged trailing edge.
+ */
+import Logo from './brand/Logo.astro';
+import { speedMarkup, vanMarkup } from './brand/logo';
+import { site } from '../config/site';
+import { useT, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const letters = [...site.brand[lang]];
+---
+
+<div class="loader" aria-hidden="true">
+  <div class="loader__inner">
+    <div class="loader__badge"><Logo /></div>
+    <p class="loader__word" lang={lang}>
+      {letters.map((ch, i) => <span style={`--i:${i}`}>{ch}</span>)}
+    </p>
+    <div class="loader__road">
+      <svg class="loader__line" viewBox="0 0 320 4" preserveAspectRatio="none"><line x1="0" y1="2" x2="320" y2="2"></line></svg>
+      <span class="loader__track">
+        <svg class="loader__van" viewBox="0 120 512 280" set:html={speedMarkup() + vanMarkup('currentColor')} />
+      </span>
+    </div>
+    <p class="loader__tag">{t.loader.line}</p>
+  </div>
+</div>
+
+<style>
+  .loader {
+    display: none;
+  }
+  :global(html.has-loader) .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(60% 50% at 50% 42%, rgb(210 71 11 / 0.16), transparent 70%), var(--night);
+    color: var(--night-text);
+    animation: loader-out 0.85s var(--ease-io) 1.3s forwards;
+    will-change: transform;
+  }
+  /* curved trailing edge with an orange rim, visible only while the panel lifts */
+  .loader::after {
+    content: '';
+    position: absolute;
+    left: -10%;
+    top: calc(100% - 1px);
+    width: 120%;
+    height: 12vh;
+    background: var(--night);
+    border-radius: 0 0 50% 50%;
+    box-shadow: 0 5px 0 var(--orange);
+  }
+  .loader__inner {
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    animation: loader-inner 0.7s var(--ease-io) 1.3s forwards;
+  }
+  .loader__badge {
+    width: clamp(64px, 16vw, 84px);
+    filter: drop-shadow(0 14px 30px rgb(223 13 20 / 0.45));
+    animation: badge-pop 0.7s var(--ease-back) 0.05s both;
+  }
+  .loader__word {
+    display: flex;
+    font-size: clamp(2.6rem, 9vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+  }
+  .loader__word span {
+    display: inline-block;
+    opacity: 0;
+    animation: glyph-pop 0.55s var(--ease-back) both;
+    animation-delay: calc(0.22s + var(--i) * 55ms);
+  }
+  .loader__road {
+    position: relative;
+    width: min(62vw, 300px);
+    height: 34px;
+    overflow: hidden;
+  }
+  .loader__line {
+    position: absolute;
+    left: 0;
+    bottom: 3px;
+    width: 100%;
+    height: 4px;
+    overflow: visible;
+  }
+  .loader__line line {
+    stroke: rgb(255 255 255 / 0.5);
+    stroke-width: 2.5;
+    stroke-dasharray: 12 9;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  /* the road is "drawn" behind the van */
+  .loader__line {
+    clip-path: inset(0 100% 0 0);
+    animation: draw-road 0.85s var(--ease-io) 0.35s both;
+  }
+  .loader__track {
+    position: absolute;
+    inset: 0;
+    animation: slide-right-track 0.85s var(--ease-io) 0.35s both;
+  }
+  .loader__van {
+    position: absolute;
+    left: 0;
+    bottom: 4px;
+    width: 58px;
+    height: auto;
+    margin-left: -50px;
+    color: var(--night);
+    overflow: visible;
+    animation: van-bump 0.16s ease-in-out 0.35s 5 alternate;
+  }
+  .loader__tag {
+    color: var(--night-muted);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    opacity: 0;
+    animation: fade-in 0.5s var(--ease) 0.75s forwards;
+  }
+
+  @keyframes badge-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.3) rotate(-18deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes glyph-pop {
+    from {
+      opacity: 0;
+      transform: translateY(40%) scale(0.5) rotate(-10deg);
+    }
+    45% {
+      opacity: 1;
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes draw-road {
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes slide-right-track {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(100% + 54px));
+    }
+  }
+  @keyframes van-bump {
+    to {
+      transform: translateY(-1.5px);
+    }
+  }
+  @keyframes fade-in {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes loader-out {
+    to {
+      transform: translateY(calc(-100% - 13vh));
+      visibility: hidden;
+    }
+  }
+  @keyframes loader-inner {
+    to {
+      transform: translateY(-10vh);
+      opacity: 0;
+    }
+  }
+</style>

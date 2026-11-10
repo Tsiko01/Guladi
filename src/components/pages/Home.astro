@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import HeroSlider from '../HeroSlider.astro';
+import Services from '../sections/Services.astro';
+import Why from '../sections/Why.astro';
+import How from '../sections/How.astro';
+import Gallery from '../sections/Gallery.astro';
+import Contact from '../sections/Contact.astro';
+import { homeHref, useT, type Lang } from '../../i18n';
+import { businessSchema, websiteSchema } from '../../lib/schema';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<Base
+  lang={lang}
+  title={t.seo.home.title}
+  description={t.seo.home.description}
+  paths={{ ka: homeHref('ka'), en: homeHref('en') }}
+  jsonLd={[businessSchema(lang), websiteSchema(lang)]}
+>
+  <HeroSlider lang={lang} />
+  <Services lang={lang} />
+  <Why lang={lang} />
+  <How lang={lang} />
+  <Gallery lang={lang} />
+  <Contact lang={lang} />
+</Base>

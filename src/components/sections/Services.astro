@@ -1,0 +1,47 @@
+---
+import ServiceCard from '../ServiceCard.astro';
+import { services } from '../../config/services';
+import { useT, type Lang } from '../../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<section class="section" id="services" aria-labelledby="services-title">
+  <div class="container">
+    <header class="section-head" data-reveal>
+      <p class="eyebrow">{t.services.eyebrow}</p>
+      <h2 class="section-title" id="services-title">{t.services.title}</h2>
+    </header>
+    <ul class="svc-grid" role="list">
+      {services.map((service, i) => <ServiceCard service={service} lang={lang} index={i} />)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .svc-grid {
+    --gap: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--gap);
+    margin: 0;
+  }
+  .svc-grid > :global(li) {
+    width: 100%;
+  }
+  @media (min-width: 640px) {
+    .svc-grid > :global(li) {
+      width: calc((100% - var(--gap)) / 2);
+    }
+  }
+  @media (min-width: 1024px) {
+    .svc-grid > :global(li) {
+      width: calc((100% - 2 * var(--gap)) / 3);
+    }
+  }
+</style>

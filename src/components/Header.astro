@@ -1,0 +1,342 @@
+---
+import Logo from './brand/Logo.astro';
+import Icon from './Icon.astro';
+import LangSwitch from './LangSwitch.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { site, telHref, waHref } from '../config/site';
+import { homeHref, sections, useT, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  paths: Record<Lang, string>;
+}
+const { lang, paths } = Astro.props;
+const t = useT(lang);
+const sub = lang === 'ka' ? 'მოძრავი ვულკანიზაცია' : 'Mobile tire service';
+---
+
+<header class="header" data-header>
+  <div class="container header__bar">
+    <a class="brand" href={homeHref(lang)}>
+      <Logo class="brand__badge" />
+      <span class="brand__text">
+        <span class="brand__name">{site.brand[lang]}</span>
+        <span class="brand__sub">{sub}</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label={t.nav.primary}>
+      <ul role="list">
+        {
+          sections.map((id) => (
+            <li>
+              <a href={homeHref(lang, `#${id}`)} data-nav={id}>
+                {t.nav[id]}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="header__actions">
+      <LangSwitch lang={lang} paths={paths} />
+      <ThemeToggle lang={lang} />
+      <a class="btn btn--primary btn--sm header__call" href={telHref}>
+        <Icon name="phone" />
+        <span class="header__call-text">{t.nav.call}</span>
+        <span class="visually-hidden">{site.phone.display}</span>
+      </a>
+      <button type="button" class="burger" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle>
+        <span class="burger__lines" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="visually-hidden" data-label-open>{t.nav.menuOpen}</span>
+        <span class="visually-hidden" data-label-close hidden>{t.nav.menuClose}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-menu" id="mobile-menu" data-menu hidden>
+    <nav class="container mobile-menu__inner" aria-label={t.nav.primary}>
+      <ul role="list">
+        {
+          sections.map((id, i) => (
+            <li style={`--i:${i}`}>
+              <a href={homeHref(lang, `#${id}`)} data-nav={id}>
+                {t.nav[id]}
+                <Icon name="arrowRight" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="mobile-menu__cta">
+        <a class="btn btn--primary" href={telHref}><Icon name="phone" />{t.nav.call}</a>
+        <a class="btn btn--wa" href={waHref(lang)} target="_blank" rel="noopener"><Icon name="whatsapp" />WhatsApp</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 100;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    transition:
+      box-shadow 0.4s var(--ease),
+      background-color 0.4s var(--ease);
+  }
+  .header.is-scrolled {
+    box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.6);
+  }
+  .header__bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: var(--header-h);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: auto;
+    color: var(--text);
+    text-decoration: none;
+    min-width: 0;
+  }
+  .brand :global(.brand__badge) {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 9px;
+    box-shadow: 0 6px 18px -8px rgb(223 13 20 / 0.7);
+    transition: transform 0.5s var(--ease-back);
+  }
+  .brand:hover :global(.brand__badge) {
+    transform: rotate(-6deg) scale(1.06);
+  }
+  .brand__text {
+    display: grid;
+    line-height: 1.15;
+    min-width: 0;
+  }
+  .brand__name {
+    font-size: 1.0625rem;
+    font-weight: 900;
+  }
+  .brand__sub {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav {
+    display: none;
+  }
+  .nav ul {
+    display: flex;
+    gap: 26px;
+    margin: 0;
+  }
+  .nav a {
+    position: relative;
+    display: block;
+    padding: 8px 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.25s var(--ease);
+  }
+  .nav a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.35s var(--ease);
+  }
+  .nav a:hover,
+  .nav a[aria-current] {
+    color: var(--text);
+  }
+  .nav a:hover::after,
+  .nav a[aria-current]::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  .header__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header__call {
+    display: none;
+    padding: 0 14px;
+  }
+  .header__call-text {
+    display: none;
+  }
+
+  .burger {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+  }
+  .burger__lines {
+    position: relative;
+    width: 18px;
+    height: 12px;
+  }
+  .burger__lines span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition:
+      transform 0.4s var(--ease),
+      opacity 0.2s var(--ease);
+  }
+  .burger__lines span:nth-child(1) {
+    top: 0;
+  }
+  .burger__lines span:nth-child(2) {
+    top: 5px;
+  }
+  .burger__lines span:nth-child(3) {
+    top: 10px;
+  }
+  .burger[aria-expanded='true'] .burger__lines span:nth-child(1) {
+    transform: translateY(5px) rotate(45deg);
+  }
+  .burger[aria-expanded='true'] .burger__lines span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0.2);
+  }
+  .burger[aria-expanded='true'] .burger__lines span:nth-child(3) {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+
+  .mobile-menu {
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    max-height: calc(100dvh - var(--header-h));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .mobile-menu.is-open {
+    animation: menu-in 0.4s var(--ease) both;
+  }
+  .mobile-menu__inner {
+    padding-block: 12px 28px;
+  }
+  .mobile-menu ul {
+    margin: 0;
+  }
+  .mobile-menu li {
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-menu.is-open li {
+    animation: item-in 0.5s var(--ease) both;
+    animation-delay: calc(0.05s + var(--i) * 45ms);
+  }
+  .mobile-menu li a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    color: var(--text);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .mobile-menu li a :global(.icon) {
+    width: 18px;
+    color: var(--accent);
+    transition: transform 0.3s var(--ease);
+  }
+  .mobile-menu li a:hover :global(.icon) {
+    transform: translateX(4px);
+  }
+  .mobile-menu__cta {
+    display: grid;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes item-in {
+    from {
+      opacity: 0;
+      transform: translateX(-14px);
+    }
+  }
+
+  @media (max-width: 420px) {
+    .header__bar,
+    .header__actions {
+      gap: 8px;
+    }
+    .brand__sub {
+      font-size: 0.6875rem;
+    }
+  }
+  @media (max-width: 359px) {
+    .brand__sub {
+      display: none;
+    }
+  }
+  @media (min-width: 640px) {
+    .header__call {
+      display: inline-flex;
+    }
+  }
+  @media (min-width: 1180px) {
+    .nav {
+      display: block;
+    }
+    .burger,
+    .mobile-menu {
+      display: none;
+    }
+  }
+  @media (min-width: 1300px) {
+    .header__call {
+      padding: 0 18px;
+    }
+    .header__call-text {
+      display: inline;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-menu.is-open,
+    .mobile-menu.is-open li {
+      animation: none;
+    }
+  }
+</style>

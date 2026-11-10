@@ -1,0 +1,279 @@
+---
+/**
+ * Floating contact button, modelled on sabacho.ge: a round phone button that
+ * expands into WhatsApp + Call. Behaviour in src/scripts/fab.ts.
+ */
+import Icon from './Icon.astro';
+import { telHref, waHref } from '../config/site';
+import { useT, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const items = [
+  { href: waHref(lang), label: t.fab.whatsapp, icon: 'whatsapp' as const, mod: 'wa', external: true },
+  { href: telHref, label: t.fab.call, icon: 'phone' as const, mod: 'call', external: false },
+];
+---
+
+<div class="fab" data-fab>
+  <ul class="fab__list" id="fab-list" role="list">
+    {
+      items.map((it, i) => (
+        <li class="fab__item" style={`--open:${i * 70}ms;--close:${(items.length - i) * 30}ms`}>
+          <a
+            class="fab__link"
+            href={it.href}
+            tabindex="-1"
+            aria-label={it.label}
+            target={it.external ? '_blank' : undefined}
+            rel={it.external ? 'noopener' : undefined}
+            data-fab-item
+          >
+            <span class="fab__label" aria-hidden="true">
+              {it.label}
+            </span>
+            <span class:list={['fab__circle', `fab__circle--${it.mod}`]}>
+              <Icon name={it.icon} />
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <button
+    type="button"
+    class="fab__main"
+    aria-expanded="false"
+    aria-controls="fab-list"
+    aria-label={t.fab.open}
+    data-label-open={t.fab.open}
+    data-label-close={t.fab.close}
+    data-fab-toggle
+  >
+    <span class="fab__ring" aria-hidden="true"></span>
+    <span class="fab__ico fab__ico--phone" aria-hidden="true"><Icon name="phone" /></span>
+    <span class="fab__ico fab__ico--x" aria-hidden="true"><Icon name="x" /></span>
+  </button>
+</div>
+
+<style>
+  .fab {
+    position: fixed;
+    right: max(20px, env(safe-area-inset-right));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    transition:
+      opacity 0.3s var(--ease),
+      transform 0.3s var(--ease);
+  }
+  :global(html.menu-open) .fab,
+  :global(html.has-loader) .fab {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+  }
+  .fab__list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    margin: 0;
+  }
+  .fab__item {
+    opacity: 0;
+    transform: translateY(24px);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.5s var(--ease-std),
+      transform 0.5s var(--ease-std),
+      visibility 0s linear 0.6s;
+    transition-delay: var(--close), var(--close), 0.6s;
+  }
+  .fab.is-open .fab__item {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: var(--open), var(--open), 0s;
+  }
+  .fab__link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+  .fab__label {
+    display: none;
+    padding: 8px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    color: var(--text);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 10px 24px -10px rgb(0 0 0 / 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .fab__circle {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    box-shadow: 0 16px 28px -10px rgb(0 0 0 / 0.55);
+    transition: transform 0.3s var(--ease);
+  }
+  .fab__link:hover .fab__circle,
+  .fab__link:focus-visible .fab__circle {
+    transform: scale(1.1);
+  }
+  .fab__circle :global(.icon) {
+    width: 21px;
+    height: 21px;
+  }
+  .fab__circle--wa {
+    background: var(--wa);
+  }
+  .fab__circle--wa :global(.icon) {
+    width: 23px;
+    height: 23px;
+  }
+  .fab__circle--call {
+    background: var(--orange);
+  }
+
+  .fab__main {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    box-shadow:
+      0 25px 50px -12px rgb(0 0 0 / 0.5),
+      0 10px 30px -10px rgb(210 71 11 / 0.7);
+    transition:
+      transform 0.5s var(--ease-std),
+      background-color 0.5s var(--ease-std),
+      border-color 0.5s var(--ease-std),
+      color 0.5s var(--ease-std);
+  }
+  .fab__main:hover {
+    transform: scale(1.1);
+    background: #e2520f;
+  }
+  .fab.is-open .fab__main {
+    transform: rotate(90deg);
+    background: var(--bg);
+    border-color: var(--orange-text);
+    color: var(--orange-text);
+  }
+  .fab__ico {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    transition:
+      opacity 0.3s var(--ease),
+      transform 0.5s var(--ease-std);
+  }
+  .fab__ico :global(.icon) {
+    width: 24px;
+    height: 24px;
+  }
+  .fab__ico--x {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+  .fab.is-open .fab__ico--x {
+    opacity: 1;
+    transform: none;
+  }
+  .fab.is-open .fab__ico--phone {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.6);
+  }
+  /* idle: soft pulse ring + an occasional phone wiggle */
+  .fab__ring {
+    position: absolute;
+    inset: -1px;
+    border-radius: 50%;
+    border: 2px solid var(--orange);
+    animation: fab-pulse 2.6s var(--ease) infinite;
+    pointer-events: none;
+  }
+  .fab__ico--phone {
+    animation: fab-wiggle 6s var(--ease) 3s infinite;
+  }
+  .fab.is-open .fab__ring {
+    animation: none;
+    opacity: 0;
+  }
+  @keyframes fab-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.75;
+    }
+    70%,
+    100% {
+      transform: scale(1.55);
+      opacity: 0;
+    }
+  }
+  @keyframes fab-wiggle {
+    0%,
+    86%,
+    100% {
+      rotate: 0deg;
+    }
+    88%,
+    92%,
+    96% {
+      rotate: -14deg;
+    }
+    90%,
+    94% {
+      rotate: 14deg;
+    }
+  }
+  @media (min-width: 640px) {
+    .fab__label {
+      display: inline-block;
+    }
+  }
+  @media (min-width: 768px) {
+    .fab {
+      right: 32px;
+      bottom: 32px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fab__ring,
+    .fab__ico--phone {
+      animation: none;
+    }
+    .fab__item,
+    .fab.is-open .fab__item {
+      transition-duration: 0.01s;
+      transition-delay: 0s;
+    }
+  }
+</style>

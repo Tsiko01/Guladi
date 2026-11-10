@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { telHref } from '../config/site';
+import { homeHref, useT } from '../i18n';
+
+const lang = 'ka';
+const t = useT(lang);
+const en = useT('en');
+---
+
+<Base lang={lang} title={t.seo.notFound.title} description={t.seo.notFound.description}>
+  <section class="nf">
+    <div class="container nf__inner">
+      <p class="nf__code" aria-hidden="true">4<span>0</span>4</p>
+      <h1 class="nf__title">{t.notFound.title}</h1>
+      <p class="nf__text">{t.notFound.text}</p>
+      <p class="nf__text nf__text--en" lang="en">{en.notFound.title}. {en.notFound.text}</p>
+      <div class="nf__actions">
+        <a class="btn btn--primary" href={homeHref(lang)}>{t.notFound.home}</a>
+        <a class="btn btn--outline" href={telHref}><Icon name="phone" />{t.nav.call}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    padding: calc(var(--header-h) + 48px) 0 64px;
+    text-align: center;
+  }
+  .nf__inner {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+  }
+  .nf__code {
+    font-size: clamp(5rem, 18vw, 9rem);
+    font-weight: 900;
+    line-height: 1;
+  }
+  .nf__code span {
+    display: inline-block;
+    color: var(--accent);
+    animation: nf-spin 4s linear infinite;
+  }
+  .nf__title {
+    font-size: clamp(1.6rem, 1.2rem + 2vw, 2.4rem);
+  }
+  .nf__text {
+    max-width: 52ch;
+    color: var(--muted);
+  }
+  .nf__text--en {
+    font-size: 0.9375rem;
+  }
+  .nf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  @keyframes nf-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nf__code span {
+      animation: none;
+    }
+  }
+</style>

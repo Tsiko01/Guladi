@@ -1,0 +1,198 @@
+---
+import Icon from './Icon.astro';
+import Photo from './Photo.astro';
+import type { Service } from '../config/services';
+import { serviceHref, useT, type Lang } from '../i18n';
+import { serviceCover } from '../lib/photos';
+
+interface Props {
+  service: Service;
+  lang: Lang;
+  index?: number;
+  compact?: boolean;
+}
+const { service, lang, index = 0, compact = false } = Astro.props;
+const t = useT(lang);
+const cover = serviceCover(service.slug);
+---
+
+<li class:list={['svc', { 'svc--compact': compact }]} data-reveal style={`--d:${(index % 3) * 0.08}s`}>
+  <a class="svc__link" href={serviceHref(lang, service.slug)}>
+    <div class="svc__media">
+      {
+        cover && (
+          <Photo
+            name={`work/${cover.id}`}
+            alt=""
+            sizes={compact ? '(min-width: 1024px) 300px, (min-width: 640px) 45vw, 100vw' : '(min-width: 1280px) 410px, (min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw'}
+            maxWidth={900}
+          />
+        )
+      }
+      <span class="svc__icon" aria-hidden="true"><Icon name={service.icon} /></span>
+    </div>
+    <div class="svc__body">
+      <h3 class="svc__title">{service.title[lang]}</h3>
+      {!compact && <p class="svc__text">{service.short[lang]}</p>}
+      <span class="svc__more" aria-hidden="true">
+        <span class="svc__line"></span>
+        <span class="svc__more-text">{t.services.more}</span>
+        <Icon name="arrowRight" />
+      </span>
+    </div>
+  </a>
+</li>
+
+<style>
+  .svc {
+    display: flex;
+  }
+  .svc__link {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    box-shadow: var(--shadow);
+    transition:
+      transform 0.5s var(--ease),
+      border-color 0.5s var(--ease),
+      box-shadow 0.5s var(--ease);
+  }
+  .svc__link:hover {
+    transform: translateY(-6px);
+    border-color: rgb(210 71 11 / 0.5);
+    box-shadow:
+      var(--shadow),
+      0 22px 50px -26px rgb(210 71 11 / 0.65);
+  }
+  .svc__media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    overflow: clip;
+    background: var(--night-2);
+  }
+  .svc__media :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition:
+      transform 1s var(--ease),
+      filter 0.6s var(--ease);
+  }
+  .svc__link:hover .svc__media :global(img) {
+    transform: scale(1.07);
+    filter: saturate(1.1) brightness(1.05);
+  }
+  .svc__media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(10 11 13 / 0.7), rgb(10 11 13 / 0.05) 55%);
+    pointer-events: none;
+  }
+  .svc__icon {
+    position: absolute;
+    left: 16px;
+    bottom: 14px;
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--orange);
+    color: #fff;
+    box-shadow: 0 10px 24px -10px rgb(210 71 11 / 0.9);
+    transition: transform 0.5s var(--ease-back);
+  }
+  .svc__icon :global(.icon) {
+    width: 22px;
+    height: 22px;
+  }
+  .svc__link:hover .svc__icon {
+    transform: translateY(-4px) rotate(-8deg);
+  }
+  .svc__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+    padding: 22px 22px 24px;
+  }
+  .svc__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .svc__text {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  .svc__more {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 14px;
+    color: var(--accent);
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+  .svc__line {
+    width: 32px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--primary);
+    transition: width 0.5s var(--ease);
+  }
+  .svc__more-text,
+  .svc__more :global(.icon) {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition:
+      opacity 0.4s var(--ease),
+      transform 0.4s var(--ease);
+  }
+  .svc__more :global(.icon) {
+    width: 16px;
+    height: 16px;
+  }
+  .svc__link:hover .svc__line,
+  .svc__link:focus-visible .svc__line {
+    width: 18px;
+  }
+  .svc__link:hover .svc__more-text,
+  .svc__link:hover .svc__more :global(.icon),
+  .svc__link:focus-visible .svc__more-text,
+  .svc__link:focus-visible .svc__more :global(.icon) {
+    opacity: 1;
+    transform: none;
+  }
+  /* touch screens have no hover: always show "learn more" */
+  @media (hover: none) {
+    .svc__more-text,
+    .svc__more :global(.icon) {
+      opacity: 1;
+      transform: none;
+    }
+    .svc__line {
+      width: 18px;
+    }
+  }
+  .svc--compact .svc__body {
+    padding: 18px 18px 20px;
+  }
+  .svc--compact .svc__title {
+    font-size: 1rem;
+  }
+</style>

@@ -1,0 +1,65 @@
+---
+/** Light / dark switch. State lives on <html data-theme>; see src/scripts/theme.ts. */
+import Icon from './Icon.astro';
+import { useT, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const t = useT(Astro.props.lang);
+---
+
+<button type="button" class="theme-toggle" aria-pressed="true" data-theme-toggle>
+  <Icon name="moon" class="theme-toggle__moon" />
+  <Icon name="sun" class="theme-toggle__sun" />
+  <span class="visually-hidden">{t.nav.themeLabel}</span>
+</button>
+
+<style>
+  .theme-toggle {
+    position: relative;
+    flex: none;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+    color: var(--text);
+    overflow: hidden;
+    transition:
+      background-color 0.3s var(--ease),
+      border-color 0.3s var(--ease),
+      transform 0.3s var(--ease);
+  }
+  .theme-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .theme-toggle:active {
+    transform: scale(0.92);
+  }
+  .theme-toggle :global(.icon) {
+    position: absolute;
+    width: 19px;
+    height: 19px;
+    transition:
+      transform 0.55s var(--ease-back),
+      opacity 0.3s var(--ease);
+  }
+  /* dark theme shows the sun ("switch to light"), light theme shows the moon */
+  .theme-toggle :global(.theme-toggle__moon) {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.4);
+  }
+  :global(:root[data-theme='light']) .theme-toggle :global(.theme-toggle__moon) {
+    opacity: 1;
+    transform: none;
+  }
+  :global(:root[data-theme='light']) .theme-toggle :global(.theme-toggle__sun) {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.4);
+  }
+</style>

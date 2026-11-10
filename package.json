@@ -1,0 +1,29 @@
+{
+  "name": "guladi-mobile-tire-service",
+  "version": "1.0.0",
+  "description": "მოძრავი ვულკანიზაცია გულადი — bilingual (ka/en) website",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "photos": "node scripts/prepare-photos.mjs",
+    "fonts": "node scripts/subset-fonts.mjs",
+    "brand": "node scripts/build-brand-assets.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.4.7",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@fontsource-variable/noto-sans-georgian": "^5.3.0",
+    "lighthouse": "^13.6.0",
+    "playwright-core": "^1.65.0",
+    "subset-font": "^2.9.0",
+    "typescript": "^6.0.3"
+  }
+}

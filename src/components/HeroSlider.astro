@@ -1,0 +1,526 @@
+---
+/**
+ * Home-page hero slider. Slide 1 is real HTML with the page's <h1> and the LCP
+ * image; slides 2–5 keep their image URLs in data-* attributes until the page
+ * has loaded (src/scripts/slider.ts), so they never compete with the first
+ * paint. Phones get a 9:16 crop, larger screens the wide photo.
+ */
+import { getImage } from 'astro:assets';
+import Icon from './Icon.astro';
+import { slides } from '../config/photos';
+import { telHref } from '../config/site';
+import { serviceHref, useT, type Lang } from '../i18n';
+import { getPhoto, widthsFor } from '../lib/photos';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const PORTRAIT = '(max-aspect-ratio: 4/5)';
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+
+const built = await Promise.all(
+  slides.map(async (s) => {
+    const wide = getPhoto(s.image)!;
+    const tall = getPhoto(s.portrait)!;
+    const [wAvif, wWebp, tAvif, tWebp, fallback] = await Promise.all([
+      getImage({ src: wide, widths: widthsFor(wide), format: 'avif', quality: 52 }),
+      getImage({ src: wide, widths: widthsFor(wide), format: 'webp', quality: 66 }),
+      getImage({ src: tall, widths: widthsFor(tall, 1080), format: 'avif', quality: 52 }),
+      getImage({ src: tall, widths: widthsFor(tall, 1080), format: 'webp', quality: 66 }),
+      getImage({ src: wide, width: Math.min(1366, wide.width), format: 'jpg', quality: 70 }),
+    ]);
+    return {
+      ...s,
+      copy: t.hero.slides[s.id],
+      width: wide.width,
+      height: wide.height,
+      sources: [
+        { media: PORTRAIT, type: 'image/avif', srcset: tAvif.srcSet.attribute, sizes: 'max(100vw, 57vh)' },
+        { media: PORTRAIT, type: 'image/webp', srcset: tWebp.srcSet.attribute, sizes: 'max(100vw, 57vh)' },
+        { media: undefined, type: 'image/avif', srcset: wAvif.srcSet.attribute, sizes: 'max(100vw, 150vh)' },
+        { media: undefined, type: 'image/webp', srcset: wWebp.srcSet.attribute, sizes: 'max(100vw, 150vh)' },
+      ],
+      fallback: fallback.src,
+    };
+  }),
+);
+const total = built.length;
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<section class="hero" aria-roledescription="carousel" aria-label={t.hero.region} data-slider id="top">
+  <div class="hero__slides" data-track>
+    {
+      built.map((s, i) => {
+        const first = i === 0;
+        const Title = first ? 'h1' : 'h2';
+        return (
+          <div
+            class:list={['slide', { 'is-active': first }]}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${t.hero.slide} ${i + 1} / ${total}`}
+            aria-hidden={first ? undefined : 'true'}
+            inert={!first}
+            data-initial={first ? '' : undefined}
+            data-slide
+          >
+            <picture class="slide__media">
+              {s.sources.map((src) =>
+                first ? (
+                  <source media={src.media} type={src.type} srcset={src.srcset} sizes={src.sizes} />
+                ) : (
+                  <source media={src.media} type={src.type} data-srcset={src.srcset} sizes={src.sizes} />
+                ),
+              )}
+              {first ? (
+                <img src={s.fallback} alt={s.copy.alt} width={s.width} height={s.height} style={`object-position:${s.position}`} fetchpriority="high" decoding="async" />
+              ) : (
+                <img src={BLANK} data-src={s.fallback} alt={s.copy.alt} width={s.width} height={s.height} style={`object-position:${s.position}`} decoding="async" />
+              )}
+            </picture>
+            <div class="slide__shade" />
+            <div class="container slide__content">
+              <p class="slide__badge">
+                <span class="slide__pulse" aria-hidden="true" />
+                {s.copy.badge}
+              </p>
+              <Title class="slide__title">
+                {s.copy.title} <span class="slide__accent">{s.copy.accent}</span>
+              </Title>
+              <p class="slide__text">{s.copy.text}</p>
+              <div class="slide__actions">
+                <a class="btn btn--primary" href={telHref}>
+                  <Icon name="phone" />
+                  {t.hero.call}
+                </a>
+                {s.service ? (
+                  <a class="btn btn--ghost" href={serviceHref(lang, s.service)}>
+                    {t.hero.more}
+                    <Icon name="arrowRight" />
+                  </a>
+                ) : (
+                  <a class="btn btn--ghost" href="#services">
+                    {t.hero.services}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })
+    }
+  </div>
+
+  <div class="hero__ui container">
+    <div class="hero__dots">
+      {
+        built.map((_, i) => (
+          <button type="button" class="hero__dot" aria-label={`${t.hero.goTo} ${i + 1}`} aria-current={i === 0 ? 'true' : undefined} data-dot={i}>
+            <span class="hero__bar" />
+          </button>
+        ))
+      }
+    </div>
+    <p class="hero__count" aria-hidden="true">
+      <span class="hero__count-now" data-count>{pad(1)}</span>
+      <span class="hero__count-sep"></span>
+      <span>{pad(total)}</span>
+    </p>
+    <div class="hero__btns">
+      <button type="button" class="hero__btn" data-toggle aria-label={t.hero.pause} data-label-pause={t.hero.pause} data-label-play={t.hero.play}>
+        <Icon name="pause" class="hero__ico-pause" />
+        <Icon name="play" class="hero__ico-play" />
+      </button>
+      <button type="button" class="hero__btn" data-prev aria-label={t.hero.prev}><Icon name="chevronLeft" /></button>
+      <button type="button" class="hero__btn" data-next aria-label={t.hero.next}><Icon name="chevronRight" /></button>
+    </div>
+  </div>
+  <p class="visually-hidden" aria-live="polite" aria-atomic="true" data-live></p>
+</section>
+
+<style>
+  .hero {
+    --dur: 7s;
+    --enter: 0s;
+    position: relative;
+    height: 100svh;
+    min-height: 640px;
+    max-height: 1100px;
+    /* clip (not hidden): the zoomed slide images must never make the hero scrollable */
+    overflow: hidden;
+    overflow: clip;
+    background: var(--night);
+    color: var(--night-text);
+    isolation: isolate;
+    touch-action: pan-y;
+  }
+  /* the intro loader is playing: start the first slide after it lifts */
+  :global(html.intro) .hero {
+    --enter: 1.45s;
+  }
+  .hero__slides {
+    position: absolute;
+    inset: 0;
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 1.1s var(--ease-std),
+      visibility 0s linear 1.1s;
+  }
+  .slide.is-active {
+    z-index: 1;
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 1.1s var(--ease-std),
+      visibility 0s;
+  }
+  .slide__media,
+  .slide__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .slide__media img {
+    object-fit: cover;
+    transform: scale(1.12);
+    transition: transform 1.4s var(--ease-std);
+  }
+  /* slow Ken Burns zoom on the visible slide */
+  .slide.is-active .slide__media img {
+    transform: scale(1.02);
+    transition: transform calc(var(--dur) + 1.5s) linear;
+  }
+  .slide__shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgb(10 11 13 / 0.95) 0%, rgb(10 11 13 / 0.72) 50%, rgb(10 11 13 / 0.2) 100%),
+      linear-gradient(0deg, rgb(10 11 13 / 0.7) 0%, transparent 30%);
+  }
+  .slide__content {
+    position: relative;
+    z-index: 1;
+    padding-top: var(--header-h);
+    padding-bottom: 92px;
+  }
+  .slide__content > * {
+    max-width: 680px;
+  }
+  /* staggered text entrance */
+  .slide__content > * {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 0.5s var(--ease),
+      transform 0.5s var(--ease);
+  }
+  .slide.is-active .slide__content > * {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.9s var(--ease),
+      transform 0.9s var(--ease);
+  }
+  /* first paint: slide 1 is already active, so animate it in once */
+  .slide[data-initial].is-active .slide__media img {
+    animation: kenburns calc(var(--dur) + 1.5s) linear both;
+  }
+  .slide[data-initial].is-active .slide__content > * {
+    animation: rise 0.9s var(--ease) both;
+    animation-delay: calc(var(--enter) + 0.25s + var(--n, 0) * 0.12s);
+  }
+  .slide__content > :nth-child(2) {
+    --n: 1;
+  }
+  .slide__content > :nth-child(3) {
+    --n: 2;
+  }
+  .slide__content > :nth-child(4) {
+    --n: 3;
+  }
+  .slide.is-active .slide__content > :nth-child(1) {
+    transition-delay: calc(var(--enter) + 0.25s);
+  }
+  .slide.is-active .slide__content > :nth-child(2) {
+    transition-delay: calc(var(--enter) + 0.37s);
+  }
+  .slide.is-active .slide__content > :nth-child(3) {
+    transition-delay: calc(var(--enter) + 0.49s);
+  }
+  .slide.is-active .slide__content > :nth-child(4) {
+    transition-delay: calc(var(--enter) + 0.61s);
+  }
+  .slide__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding: 6px 16px;
+    border: 1px solid rgb(239 119 65 / 0.45);
+    border-radius: 999px;
+    background: rgb(210 71 11 / 0.14);
+    color: var(--orange-text);
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+  .slide__pulse {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--orange-text);
+  }
+  .slide__pulse::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+    animation: pulse-ring 2s var(--ease) infinite;
+  }
+  .slide__title {
+    font-size: clamp(2.3rem, 1.45rem + 3.6vw, 3.75rem);
+    line-height: 1.16;
+    letter-spacing: -0.005em;
+  }
+  .slide__accent {
+    display: block;
+    color: var(--orange-text);
+  }
+  .slide__text {
+    margin-top: 20px;
+    max-width: 600px !important;
+    color: var(--night-muted);
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+    line-height: 1.6;
+  }
+  .slide__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 34px;
+  }
+  .slide__actions .btn {
+    min-height: 54px;
+  }
+
+  /* controls */
+  .hero__ui {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 26px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .hero__dots {
+    display: flex;
+    gap: 6px;
+  }
+  .hero__dot {
+    width: 48px;
+    height: 32px;
+    display: grid;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .hero__bar {
+    position: relative;
+    height: 3px;
+    border-radius: 3px;
+    background: rgb(255 255 255 / 0.28);
+    overflow: hidden;
+    transition: background-color 0.3s var(--ease);
+  }
+  .hero__dot:hover .hero__bar {
+    background: rgb(255 255 255 / 0.5);
+  }
+  .hero__bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--orange-text);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .hero__dot[aria-current] .hero__bar::after {
+    transform: scaleX(1);
+  }
+  /* autoplay progress: the bar fills over --dur, then slider.ts advances */
+  .hero.is-playing .hero__dot[aria-current] .hero__bar::after {
+    animation: fill var(--dur) linear both;
+  }
+  .hero.is-held .hero__dot[aria-current] .hero__bar::after {
+    animation-play-state: paused;
+  }
+  .hero__count {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgb(255 255 255 / 0.65);
+    font-size: 0.875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+  }
+  .hero__count-now {
+    color: #fff;
+  }
+  .hero__count-sep {
+    width: 22px;
+    height: 1px;
+    background: rgb(255 255 255 / 0.4);
+  }
+  .hero__btns {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .hero__btn {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 0.24);
+    border-radius: 50%;
+    background: rgb(10 11 13 / 0.35);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    transition:
+      background-color 0.3s var(--ease),
+      border-color 0.3s var(--ease),
+      transform 0.3s var(--ease);
+  }
+  .hero__btn:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  .hero__btn:active {
+    transform: scale(0.92);
+  }
+  .hero__btn :global(.icon) {
+    width: 20px;
+    height: 20px;
+  }
+  .hero__btn :global(.hero__ico-play),
+  .hero.is-paused .hero__btn :global(.hero__ico-pause) {
+    display: none;
+  }
+  .hero.is-paused .hero__btn :global(.hero__ico-play) {
+    display: block;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+  }
+  @keyframes kenburns {
+    from {
+      transform: scale(1.12);
+    }
+    to {
+      transform: scale(1.02);
+    }
+  }
+  @keyframes fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes pulse-ring {
+    from {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    to {
+      transform: scale(3);
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .slide__shade {
+      background: linear-gradient(180deg, rgb(10 11 13 / 0.5) 0%, rgb(10 11 13 / 0.74) 45%, rgb(10 11 13 / 0.92) 100%);
+    }
+    .slide__content {
+      padding-bottom: 96px;
+    }
+    .slide__actions {
+      flex-direction: column;
+    }
+    .slide__actions .btn {
+      width: 100%;
+    }
+    /* leave the bottom-right corner to the floating contact button */
+    .hero__ui {
+      bottom: 22px;
+      gap: 12px;
+      padding-right: 64px;
+    }
+    .hero__dots {
+      gap: 6px;
+    }
+    .hero__dot {
+      width: 24px;
+    }
+    .hero__count {
+      display: none;
+    }
+    .hero__btns {
+      gap: 8px;
+    }
+    .hero__btn {
+      width: 40px;
+      height: 40px;
+    }
+  }
+  @media (max-height: 700px) and (max-width: 767px) {
+    .slide__badge {
+      margin-bottom: 14px;
+    }
+    .slide__actions {
+      margin-top: 22px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .slide,
+    .slide.is-active,
+    .slide__content > *,
+    .slide.is-active .slide__content > * {
+      transition-duration: 0.01s;
+      transition-delay: 0s !important;
+    }
+    .slide__media img,
+    .slide.is-active .slide__media img {
+      transform: none;
+      transition: none;
+    }
+    .slide__pulse::after,
+    .slide[data-initial].is-active .slide__media img,
+    .slide[data-initial].is-active .slide__content > * {
+      animation: none;
+    }
+  }
+</style>

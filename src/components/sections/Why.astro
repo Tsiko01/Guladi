@@ -1,0 +1,124 @@
+---
+import Icon from '../Icon.astro';
+import type { IconName } from '../icons';
+import { useT, type Lang } from '../../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const icons: IconName[] = ['pin', 'clock', 'zap', 'award', 'shield'];
+---
+
+<section class="section section--alt" id="why" aria-labelledby="why-title">
+  <div class="container">
+    <header class="section-head" data-reveal>
+      <p class="eyebrow">{t.why.eyebrow}</p>
+      <h2 class="section-title" id="why-title">{t.why.title}</h2>
+    </header>
+    <ul class="why-grid" role="list">
+      {
+        t.why.items.map((item, i) => (
+          <li class="why" data-reveal style={`--d:${(i % 3) * 0.08}s`}>
+            <span class="why__icon" aria-hidden="true">
+              <Icon name={icons[i]} />
+            </span>
+            <h3 class="why__title">{item.title}</h3>
+            <p class="why__text">{item.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .why-grid {
+    --gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--gap);
+    margin: 0;
+  }
+  .why {
+    position: relative;
+    width: 100%;
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    padding: 34px 26px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    text-align: center;
+    transition:
+      transform 0.5s var(--ease),
+      border-color 0.5s var(--ease),
+      box-shadow 0.5s var(--ease),
+      opacity 0.8s var(--ease);
+  }
+  /* soft orange glow that follows hover */
+  .why::before {
+    content: '';
+    position: absolute;
+    inset: auto -30% -60% -30%;
+    height: 80%;
+    background: radial-gradient(closest-side, rgb(210 71 11 / 0.22), transparent);
+    opacity: 0;
+    transition: opacity 0.5s var(--ease);
+    pointer-events: none;
+  }
+  .why:hover {
+    transform: translateY(-5px);
+    border-color: rgb(210 71 11 / 0.45);
+    box-shadow: var(--shadow);
+  }
+  .why:hover::before {
+    opacity: 1;
+  }
+  .why__icon {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--accent);
+    transition:
+      transform 0.5s var(--ease-back),
+      background-color 0.4s var(--ease),
+      color 0.4s var(--ease);
+  }
+  .why__icon :global(.icon) {
+    width: 24px;
+    height: 24px;
+  }
+  .why:hover .why__icon {
+    transform: scale(1.1) rotate(-6deg);
+    background: var(--primary);
+    color: #fff;
+  }
+  .why__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+  .why__text {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    max-width: 30ch;
+  }
+  @media (min-width: 640px) {
+    .why {
+      width: calc((100% - var(--gap)) / 2);
+    }
+  }
+  @media (min-width: 1024px) {
+    .why {
+      width: calc((100% - 2 * var(--gap)) / 3);
+    }
+  }
+</style>

@@ -1,0 +1,360 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Icon from '../Icon.astro';
+import Photo from '../Photo.astro';
+import ServiceCard from '../ServiceCard.astro';
+import How from '../sections/How.astro';
+import Gallery from '../sections/Gallery.astro';
+import { serviceBySlug, services } from '../../config/services';
+import { site, telHref, waHref } from '../../config/site';
+import { homeHref, serviceHref, useT, type Lang } from '../../i18n';
+import { serviceCover } from '../../lib/photos';
+import { abs, breadcrumbSchema, businessSchema, serviceSchema } from '../../lib/schema';
+
+interface Props {
+  lang: Lang;
+  slug: string;
+}
+const { lang, slug } = Astro.props;
+const t = useT(lang);
+const s = serviceBySlug(slug)!;
+const cover = serviceCover(slug);
+const shareImg = cover ? abs((await getImage({ src: cover.image, width: 1200, format: 'jpg', quality: 75 })).src) : undefined;
+const others = services.filter((x) => x.slug !== slug);
+---
+
+<Base
+  lang={lang}
+  title={`${s.title[lang]} — ${t.seo.serviceSuffix}`}
+  description={`${s.short[lang]} ${t.seo.serviceCall} ${site.phone.display}`}
+  paths={{ ka: serviceHref('ka', slug), en: serviceHref('en', slug) }}
+  jsonLd={[businessSchema(lang), serviceSchema(lang, slug, shareImg), breadcrumbSchema(lang, slug)]}
+>
+  <section class="sp-hero">
+    {cover && <Photo name={`work/${cover.id}`} alt={cover.alt[lang]} sizes="100vw" priority class="sp-hero__img" />}
+    <div class="sp-hero__shade"></div>
+    <div class="container sp-hero__content">
+      <nav class="crumbs" aria-label={t.servicePage.breadcrumb}>
+        <ol role="list">
+          <li><a href={homeHref(lang)}>{t.nav.home}</a></li>
+          <li><a href={homeHref(lang, '#services')}>{t.nav.services}</a></li>
+          <li><span aria-current="page">{s.title[lang]}</span></li>
+        </ol>
+      </nav>
+      <span class="sp-hero__icon" aria-hidden="true"><Icon name={s.icon} /></span>
+      <h1 class="sp-hero__title">{s.title[lang]}</h1>
+      <p class="sp-hero__lead">{s.short[lang]}</p>
+      <div class="sp-hero__actions">
+        <a class="btn btn--primary" href={telHref}><Icon name="phone" />{t.nav.call}</a>
+        <a class="btn btn--ghost" href={waHref(lang)} target="_blank" rel="noopener"><Icon name="whatsapp" />WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container sp-body">
+      <div class="sp-about" data-reveal>
+        <p class="sp-long">{s.long[lang]}</p>
+        <h2 class="sp-h2">{t.servicePage.includes}</h2>
+        <ul class="checks" role="list">
+          {
+            s.includes[lang].map((item) => (
+              <li>
+                <span class="checks__icon" aria-hidden="true">
+                  <Icon name="check" />
+                </span>
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+        <a class="sp-back" href={homeHref(lang, '#services')}><Icon name="arrowLeft" />{t.servicePage.back}</a>
+      </div>
+      <aside class="sp-cta" data-reveal style="--d:0.1s" aria-labelledby="cta-title">
+        <h2 class="sp-cta__title" id="cta-title">{t.servicePage.ctaTitle}</h2>
+        <p class="sp-cta__text">{t.servicePage.ctaText}</p>
+        <a class="sp-cta__phone" href={telHref}><Icon name="phone" />{site.phone.display}</a>
+        <a class="btn btn--primary" href={telHref}><Icon name="phone" />{t.contact.call}</a>
+        <a class="btn btn--wa" href={waHref(lang)} target="_blank" rel="noopener"><Icon name="whatsapp" />{t.contact.whatsapp}</a>
+        <p class="sp-cta__hours"><Icon name="clock" />{t.contact.hours}</p>
+      </aside>
+    </div>
+  </section>
+
+  <How lang={lang} id="how-it-works" />
+  <Gallery lang={lang} only={s.slug} id="photos" title={t.servicePage.photos} />
+
+  <section class="section section--alt" aria-labelledby="others-title">
+    <div class="container">
+      <header class="section-head" data-reveal>
+        <h2 class="section-title" id="others-title">{t.servicePage.others}</h2>
+      </header>
+      <ul class="others" role="list">
+        {others.map((o, i) => <ServiceCard service={o} lang={lang} index={i} compact />)}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .sp-hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: min(78svh, 760px);
+    padding: calc(var(--header-h) + 48px) 0 clamp(48px, 7vw, 80px);
+    overflow: hidden;
+    overflow: clip;
+    background: var(--night);
+    color: var(--night-text);
+    isolation: isolate;
+  }
+  .sp-hero :global(.sp-hero__img) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: sp-zoom 9s linear both;
+  }
+  .sp-hero__shade {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, rgb(10 11 13 / 0.94) 0%, rgb(10 11 13 / 0.7) 55%, rgb(10 11 13 / 0.3) 100%),
+      linear-gradient(0deg, rgb(10 11 13 / 0.85) 0%, transparent 50%);
+  }
+  .sp-hero__content > * {
+    max-width: 720px;
+    animation: sp-rise 0.9s var(--ease) both;
+  }
+  .sp-hero__content > :nth-child(2) {
+    animation-delay: 0.08s;
+  }
+  .sp-hero__content > :nth-child(3) {
+    animation-delay: 0.16s;
+  }
+  .sp-hero__content > :nth-child(4) {
+    animation-delay: 0.24s;
+  }
+  .sp-hero__content > :nth-child(5) {
+    animation-delay: 0.32s;
+  }
+  :global(html.intro) .sp-hero__content > * {
+    animation-delay: 1.6s;
+  }
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 26px;
+    color: var(--night-muted);
+    font-size: 0.875rem;
+  }
+  .crumbs li:not(:last-child)::after {
+    content: '/';
+    margin-left: 6px;
+    opacity: 0.5;
+  }
+  .crumbs a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+  .crumbs [aria-current] {
+    color: var(--orange-text);
+    font-weight: 700;
+  }
+  .sp-hero__icon {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 20px;
+    border-radius: 16px;
+    background: var(--orange);
+    color: #fff;
+    box-shadow: 0 14px 30px -12px rgb(210 71 11 / 0.9);
+  }
+  .sp-hero__icon :global(.icon) {
+    width: 28px;
+    height: 28px;
+  }
+  .sp-hero__title {
+    font-size: clamp(2.2rem, 1.4rem + 3.4vw, 3.75rem);
+  }
+  .sp-hero__lead {
+    margin-top: 16px;
+    color: var(--night-muted);
+    font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  }
+  .sp-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  .sp-body {
+    display: grid;
+    gap: 32px;
+  }
+  .sp-long {
+    font-size: clamp(1.125rem, 1.05rem + 0.4vw, 1.3rem);
+    line-height: 1.7;
+  }
+  .sp-h2 {
+    margin: 40px 0 18px;
+    font-size: 1.5rem;
+  }
+  .checks {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+  }
+  .checks li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-weight: 700;
+    transition:
+      border-color 0.3s var(--ease),
+      transform 0.3s var(--ease);
+  }
+  .checks li:hover {
+    border-color: rgb(210 71 11 / 0.45);
+    transform: translateX(4px);
+  }
+  .checks__icon {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+  }
+  .checks__icon :global(.icon) {
+    width: 16px;
+    height: 16px;
+  }
+  .sp-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .sp-back :global(.icon) {
+    width: 18px;
+    transition: transform 0.3s var(--ease);
+  }
+  .sp-back:hover :global(.icon) {
+    transform: translateX(-4px);
+  }
+  .sp-cta {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    align-self: start;
+    padding: 30px 26px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(90% 60% at 100% 0%, rgb(210 71 11 / 0.16), transparent 70%),
+      var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .sp-cta__title {
+    font-size: 1.5rem;
+  }
+  .sp-cta__text {
+    color: var(--muted);
+  }
+  .sp-cta__phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 6px;
+    color: var(--text);
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .sp-cta__phone:hover {
+    color: var(--accent);
+  }
+  .sp-cta__phone :global(.icon) {
+    width: 22px;
+    color: var(--accent);
+  }
+  .sp-cta__hours {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .sp-cta__hours :global(.icon) {
+    width: 16px;
+    color: var(--accent);
+  }
+  .others {
+    --gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--gap);
+    margin: 0;
+  }
+  @media (min-width: 960px) {
+    .sp-body {
+      grid-template-columns: 1fr 380px;
+      gap: 56px;
+    }
+    .sp-cta {
+      position: sticky;
+      top: calc(var(--header-h) + 24px);
+    }
+  }
+  @media (max-width: 639px) {
+    .sp-hero__actions .btn {
+      width: 100%;
+    }
+  }
+  @keyframes sp-rise {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+  }
+  @keyframes sp-zoom {
+    from {
+      transform: scale(1.1);
+    }
+    to {
+      transform: scale(1.02);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sp-hero :global(.sp-hero__img),
+    .sp-hero__content > * {
+      animation: none;
+    }
+  }
+</style>

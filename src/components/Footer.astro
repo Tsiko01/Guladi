@@ -1,0 +1,135 @@
+---
+import Logo from './brand/Logo.astro';
+import Icon from './Icon.astro';
+import { site, telHref } from '../config/site';
+import { homeHref, useT, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+const year = new Date().getFullYear();
+const name = lang === 'ka' ? site.name : site.nameEn;
+---
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <a class="footer__brand" href={homeHref(lang)}>
+      <Logo class="footer__badge" />
+      <span>{name}</span>
+    </a>
+    <a class="footer__phone" href={telHref}><Icon name="phone" />{site.phone.display}</a>
+    <ul class="footer__social" role="list">
+      <li>
+        <a href={site.social.facebook} target="_blank" rel="noopener" aria-label="Facebook"><Icon name="facebook" /></a>
+      </li>
+      <li>
+        <a href={site.social.tiktok} target="_blank" rel="noopener" aria-label="TikTok"><Icon name="tiktok" /></a>
+      </li>
+    </ul>
+    <p class="footer__copy">© {year} {t.footer.rights}</p>
+  </div>
+  <p class="container footer__credit">{t.footer.credit}</p>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--line);
+    background: var(--bg-alt);
+    padding-block: 28px 24px;
+  }
+  .footer__inner {
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    text-align: center;
+  }
+  .footer__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    font-weight: 900;
+    font-size: 0.9375rem;
+    text-decoration: none;
+  }
+  .footer__brand :global(.footer__badge) {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+  .footer__phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: color 0.3s var(--ease);
+  }
+  .footer__phone:hover {
+    color: var(--accent);
+  }
+  .footer__phone :global(.icon) {
+    width: 16px;
+    height: 16px;
+    color: var(--accent);
+  }
+  .footer__social {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+  }
+  .footer__social a {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    color: var(--text);
+    transition:
+      background-color 0.3s var(--ease),
+      border-color 0.3s var(--ease),
+      color 0.3s var(--ease);
+  }
+  .footer__social a:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .footer__social :global(.icon) {
+    width: 16px;
+    height: 16px;
+  }
+  .footer__copy {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .footer__credit {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-align: center;
+  }
+  @media (max-width: 767px) {
+    /* room for the floating contact button */
+    .footer {
+      padding-bottom: 96px;
+    }
+  }
+  @media (min-width: 768px) {
+    .footer__inner {
+      grid-template-columns: auto 1fr auto auto;
+      justify-items: start;
+      gap: 32px;
+      text-align: left;
+    }
+    .footer__phone {
+      justify-self: center;
+    }
+  }
+</style>

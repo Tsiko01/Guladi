@@ -1,0 +1,204 @@
+---
+import Icon from '../Icon.astro';
+import { site, telHref, waHref } from '../../config/site';
+import { useT, type Lang } from '../../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useT(lang);
+---
+
+<section class="section" id="contact" aria-labelledby="contact-title">
+  <div class="container">
+    <header class="section-head" data-reveal>
+      <p class="eyebrow">{t.contact.eyebrow}</p>
+      <h2 class="section-title" id="contact-title">{t.contact.title}</h2>
+    </header>
+
+    <div class="card" data-reveal>
+      <h3 class="card__name">{lang === 'ka' ? site.name : site.nameEn}</h3>
+      <a class="card__phone" href={telHref}>
+        <span class="card__phone-icon" aria-hidden="true"><Icon name="phone" /></span>
+        <span><span class="visually-hidden">{t.contact.phone}: </span>{site.phone.display}</span>
+      </a>
+      <ul class="card__meta" role="list">
+        {
+          site.address && (
+            <li>
+              <Icon name="pin" />
+              <span>
+                {t.contact.address}: {site.address[lang]}
+              </span>
+            </li>
+          )
+        }
+        <li><Icon name="clock" /><span>{t.contact.hours}</span></li>
+      </ul>
+      <div class="card__actions">
+        <a class="btn btn--primary" href={telHref}><Icon name="phone" />{t.contact.call}</a>
+        <a class="btn btn--wa" href={waHref(lang)} target="_blank" rel="noopener"><Icon name="whatsapp" />{t.contact.whatsapp}</a>
+      </div>
+      <p class="card__social-label">{t.contact.social}</p>
+      <ul class="socials" role="list">
+        <li>
+          <a href={site.social.facebook} target="_blank" rel="noopener" aria-label="Facebook"><Icon name="facebook" /></a>
+        </li>
+        <li>
+          <a href={site.social.tiktok} target="_blank" rel="noopener" aria-label="TikTok"><Icon name="tiktok" /></a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .card {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    max-width: 880px;
+    margin-inline: auto;
+    padding: clamp(36px, 6vw, 60px) clamp(20px, 5vw, 56px);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background:
+      radial-gradient(70% 60% at 50% 0%, rgb(210 71 11 / 0.14), transparent 70%),
+      var(--surface);
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  }
+  .card__name {
+    font-size: clamp(1.5rem, 1.15rem + 1.5vw, 1.875rem);
+  }
+  .card__phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text);
+    font-size: clamp(1.75rem, 1.2rem + 2.4vw, 2.25rem);
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s var(--ease);
+  }
+  .card__phone:hover {
+    color: var(--accent);
+  }
+  .card__phone-icon {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--accent);
+    animation: ring 3.2s var(--ease) infinite;
+  }
+  .card__phone-icon :global(.icon) {
+    width: 24px;
+    height: 24px;
+  }
+  .card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 24px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+  .card__meta li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card__meta :global(.icon) {
+    width: 18px;
+    height: 18px;
+    color: var(--accent);
+  }
+  .card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .card__social-label {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .socials {
+    display: flex;
+    gap: 12px;
+    margin: 0;
+  }
+  .socials a {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    color: var(--text);
+    transition:
+      background-color 0.3s var(--ease),
+      border-color 0.3s var(--ease),
+      color 0.3s var(--ease),
+      transform 0.3s var(--ease);
+  }
+  .socials a:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+  }
+  .socials :global(.icon) {
+    width: 19px;
+    height: 19px;
+  }
+  @keyframes ring {
+    0%,
+    70%,
+    100% {
+      transform: none;
+    }
+    74%,
+    82%,
+    90% {
+      transform: rotate(-12deg);
+    }
+    78%,
+    86% {
+      transform: rotate(12deg);
+    }
+  }
+  @media (max-width: 639px) {
+    .card__actions,
+    .card__actions .btn {
+      width: 100%;
+    }
+    .card__phone-icon {
+      width: 44px;
+      height: 44px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card__phone-icon {
+      animation: none;
+    }
+  }
+</style>

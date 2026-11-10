@@ -1,0 +1,80 @@
+---
+/** GE / EN switch. Links to the same page in the other language; the choice is saved (src/scripts/lang.ts). */
+import { useT, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  paths: Record<Lang, string>;
+  class?: string;
+}
+const { lang, paths, class: cls } = Astro.props;
+const t = useT(lang);
+const options = [
+  { code: 'ka' as const, short: 'GE', name: 'ქართული' },
+  { code: 'en' as const, short: 'EN', name: 'English' },
+];
+---
+
+<div class:list={['lang', cls]} role="group" aria-label={t.nav.langLabel} data-lang={lang}>
+  {
+    options.map((o) => (
+      <a href={paths[o.code]} hreflang={o.code} lang={o.code} aria-current={o.code === lang ? 'true' : undefined} data-lang-link={o.code}>
+        {o.short}
+        <span class="visually-hidden"> — {o.name}</span>
+      </a>
+    ))
+  }
+  <span class="lang__pill" aria-hidden="true"></span>
+</div>
+
+<style>
+  .lang {
+    position: relative;
+    flex: none;
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 3px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+    isolation: isolate;
+  }
+  .lang a {
+    position: relative;
+    z-index: 1;
+    min-width: 38px;
+    min-height: 36px;
+    display: grid;
+    place-items: center;
+    padding: 0 8px;
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    transition: color 0.3s var(--ease);
+  }
+  .lang a[aria-current] {
+    color: #fff;
+  }
+  .lang a:not([aria-current]):hover {
+    color: var(--text);
+  }
+  .lang__pill {
+    position: absolute;
+    z-index: 0;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    border-radius: 999px;
+    background: var(--primary);
+    box-shadow: 0 6px 16px -6px rgb(210 71 11 / 0.7);
+    transition: transform 0.45s var(--ease-back);
+  }
+  .lang[data-lang='en'] .lang__pill {
+    transform: translateX(100%);
+  }
+</style>

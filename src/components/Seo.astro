@@ -1,0 +1,62 @@
+---
+import { site } from '../config/site';
+import { ogLocale, otherLang, useT, type Lang } from '../i18n';
+import { abs, ogImage } from '../lib/schema';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  /** Path of this page in each language; omit for the 404 page (noindex, no alternates). */
+  paths?: Record<Lang, string>;
+  jsonLd?: object[];
+}
+
+const { lang, title, description, paths, jsonLd = [] } = Astro.props;
+const t = useT(lang);
+const canonical = paths ? abs(paths[lang]) : null;
+const og = ogImage(lang);
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+{
+  paths ? (
+    <>
+      <link rel="canonical" href={canonical} />
+      <link rel="alternate" hreflang="ka" href={abs(paths.ka)} />
+      <link rel="alternate" hreflang="en" href={abs(paths.en)} />
+      <link rel="alternate" hreflang="x-default" href={abs(paths.ka)} />
+      <meta name="robots" content="index, follow, max-image-preview:large" />
+    </>
+  ) : (
+    <meta name="robots" content="noindex, follow" />
+  )
+}
+<meta name="author" content={site.name} />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={lang === 'ka' ? site.name : site.nameEn} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{canonical && <meta property="og:url" content={canonical} />}
+<meta property="og:image" content={og} />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={`${t.meta.siteName} — ${t.meta.tagline}`} />
+<meta property="og:locale" content={ogLocale[lang]} />
+<meta property="og:locale:alternate" content={ogLocale[otherLang(lang)]} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={og} />
+
+<meta name="theme-color" content="#0a0b0d" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+{jsonLd.map((data) => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}

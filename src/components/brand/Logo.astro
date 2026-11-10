@@ -1,0 +1,14 @@
+---
+/** Red Guladi badge (inline SVG, decorative — the brand name is always next to it as text). */
+import { RED, speedMarkup, vanMarkup } from './logo';
+
+interface Props {
+  class?: string;
+}
+const { class: cls } = Astro.props;
+---
+
+<svg class:list={['logo-badge', cls]} viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+  <rect width="512" height="512" rx="96" fill={RED}></rect>
+  <Fragment set:html={speedMarkup() + vanMarkup()} />
+</svg>

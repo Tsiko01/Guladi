@@ -1,0 +1,83 @@
+---
+import '../styles/global.css';
+import fontKa from '../assets/fonts/noto-sans-georgian.woff2?url';
+import fontLatin from '../assets/fonts/noto-sans-georgian-latin.woff2?url';
+import Seo from '../components/Seo.astro';
+import Loader from '../components/Loader.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ContactFab from '../components/ContactFab.astro';
+import { langRoot, useT, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  /** This page's path in each language (omit on the 404 page). */
+  paths?: Record<Lang, string>;
+  jsonLd?: object[];
+}
+
+const { lang, title, description, paths, jsonLd } = Astro.props;
+const t = useT(lang);
+const switchPaths = paths ?? { ka: langRoot('ka'), en: langRoot('en') };
+---
+
+<!doctype html>
+<html lang={lang} dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script is:inline define:vars={{ lang, paths: paths ?? null }}>
+      var d = document.documentElement;
+      d.classList.add('js');
+      // arriving at a #section → render everything so the jump lands exactly
+      if (location.hash) d.classList.add('cv-off');
+      // Theme before first paint: saved choice, otherwise the system preference.
+      try {
+        var th = localStorage.getItem('guladi-theme');
+        if (th !== 'dark' && th !== 'light') th = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        d.dataset.theme = th;
+      } catch (e) {
+        d.dataset.theme = 'dark';
+      }
+      // Returning visitor who picked a language earlier → same page in that language
+      // (only when arriving from outside the site, so the GE/EN switch always works).
+      var moving = false;
+      try {
+        var saved = localStorage.getItem('guladi-lang');
+        var internal = document.referrer && new URL(document.referrer).origin === location.origin;
+        if (paths && saved && saved !== lang && paths[saved] && !internal) {
+          moving = true;
+          location.replace(paths[saved] + location.hash);
+        }
+      } catch (e) {}
+      // First page of the session → play the intro (never with reduced motion).
+      try {
+        if (!moving && !sessionStorage.getItem('guladi-intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          d.classList.add('has-loader', 'intro');
+          sessionStorage.setItem('guladi-intro', '1');
+          setTimeout(function () {
+            d.classList.remove('has-loader');
+          }, 2250);
+        }
+      } catch (e) {}
+    </script>
+    <link rel="preload" href={lang === 'ka' ? fontKa : fontLatin} as="font" type="font/woff2" crossorigin />
+    {lang === 'ka' && <link rel="preload" href={fontLatin} as="font" type="font/woff2" crossorigin />}
+    <Seo lang={lang} title={title} description={description} paths={paths} jsonLd={jsonLd} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{t.nav.skip}</a>
+    <Loader lang={lang} />
+    <Header lang={lang} paths={switchPaths} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+    <ContactFab lang={lang} />
+    <script>
+      import '../scripts/main';
+    </script>
+  </body>
+</html>
